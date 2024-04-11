@@ -1,0 +1,250 @@
+
+I seguenti esercizi, piu' impegnativi del solito, mostrano
+applicazioni significative della lazy evaluation.
+
+
+CRIVELLO DI ERATOSTENE
+======================
+** Il problema e' anche discusso sul libro di testo [HR] nella sezione 11.4.
+   Diversamente dal libro, si chiede di usare sequence expression (il libro usa Seq.delay) **
+  
+
+Scopo dell'esercizio e'  definire la sequenza infinita dei numeri primi
+implementando la procedura nota come "crivello (setaccio)  di Eratostene".
+Tale procedura  lavora su insiemi infiniti.
+
+Si parte dall'insieme degli interi maggiori o uguali a 2
+
+ 2 , 3 , 4 , 5 , 6 , 7 , 8 , 9 , 10 , 11 , 12 , 13 , 14 , 15 ...
+
+Si "setaccia" l'insieme mantenendo 2 ed eliminando i restanti multipli di 2.
+Si ottiene:
+
+  2 , 3 , 5 , 7 , 9 , 11 , 13 , 15 ...
+
+Si riparte mantenendo 3 ed eliminando i restanti multipli di 3.
+Si ottiene:
+
+  2 , 3 , 5 , 7 , 11 , 13, 17 .....
+
+Si riparte mantenendo 5 ed eliminando i restanti multipli di 5, e cosi' via.
+Alla fine, i numeri rimasti sono  i numeri primi.
+
+Si tratta di un processo infinito; infatti, gia' al primo passo l'operazione
+di cancellazione dei multipli di 2 richiederebbe un tempo infinito.
+Se si usa un linguaggio imperativo, per implementare il processo
+occorre limitare l'insieme di partenza, considerando l'insieme
+degli interi compresi fra 2 e un determinato N.
+In questo modo, il processo termina e si ottengono tutti
+i numeri primi compresi fra 2 e N.
+
+In F# invece si puo' implementare il processo infinito,
+senza limitazioni sull'insieme di partenza,
+sfruttando il meccanismo di lazy evaluation.
+
+
+i) Definire la funzione 
+
+    sift : int -> seq<int> -> seq<int>
+  
+che, dati un intero n > 0 e  una sequenza infinita sq di interi,
+costruisce la sequenza infinita di interi ottenuta eliminando da sq tutti i multipli di n.
+
+Date le definizioni
+
+let nat = sequenza infinita dei numeri naturali 0, 1, 2, 3, ...
+let sq1 = sift 2 nat
+let sq2 = sift 3 nat
+
+verificare che:
+
+- La lista dei primi 10 elementi di sq1 e'
+
+    [1; 3; 5; 7; 9; 11; 13; 15; 17; 19]
+
+- La lista dei primi 15 elementi di sq2 e'
+
+    [1; 2; 4; 5; 7; 8; 10; 11; 13; 14; 16; 17; 19; 20; 22]
+
+
+ii) Definire la funzione ricorsiva
+
+    sieve : seq<int> -> seq<int>
+
+che esegue il crivello di Eratostene su una sequenza infinita di interi.
+
+Piu' precisamente, data una sequenza sq infinita di interi,
+va eseguito il seguente processo *infinito*:
+
+/----------------------------------------------------------------\
+| 1. Sia x0 il primo elemento di sq                              |
+|    x0 e' il prossimo numero primo                              |
+| 2. Sia sq1 la  coda di sq                                      |
+|    Cancella da sq1 i multipli di x0                            | 
+| 3. Ripeti il processo da 1, ponendo sq uguale a sq1            |
+\----------------------------------------------------------------/
+
+Al passo 2 usare la funzione sift definita al punto precedente.
+L'iterazione e' ottenuta mediante ricorsione.
+
+
+iii) Sia nat2 la sequenza infinita degli interi n >= 2.
+La sequenza infinita primes dei numeri primi puo' essere costruita applicando sieve a nat2.
+
+Verificare che la lista dei primi 10 numeri primi e'
+ 
+ [2; 3; 5; 7; 11; 13; 17; 19; 23; 29]
+
+iv) L'implementazione fornita del Crivello di Eratostene e' poco efficiente,
+in quanto le sequenze usate vengono continuamente rigenerate da capo.
+
+Per migliorare l'efficienza si puo' usare il meccanismo di *caching* 
+che memorizza gli elementi della sequenza che sono gia' stati generatii.
+In questo modo si evita di generare piu' volte lo stesso elemento di una sequenza.
+
+Procedere come segue:
+
+a)  Definire la versione cached della funzione sift nel seguente modo:
+
+let siftC a sq = Seq.cache  ( sift a sq )   
+// siftC esegue sift e usa cache per memorizzare gli elementi della sequenza generati durante la computazione
+
+b) Definire la funzione sieveC, analoga a sieve, in cui pero' si usa  siftC al posto di sift 
+   (nelle chiamate ricorsive, sieve va sostituito con sieveC).
+
+c) Definire la sequenza cached dei numeri primi usando sieveC:
+
+let primesC = Seq.cache (sieveC nat2)
+
+Si puo' verificare sperimentalmente che l'implementazione con caching e' piu' efficiente;
+provare a generare una lista di numeri primi grande usando le due versioni.
+
+Notare inoltre che eseguendo piu' volte la ricerca di un numero primo, ad esempio
+
+Seq.item 1000 E.primesC 
+//val it : int = 7927
+Seq.item 1000 E.primesC 
+//val it : int = 7927
+
+la seconda richiesta ha una risposta immediata.
+Infatti, dopo la prima computazione il risultato e' stato memorizzato,
+quindi la seconda ricerca non richiede alcuna computazione.
+
+-----
+
+Per stampare il tempo richiesto nella computazione (e altre informazioni),
+scrivere nell'interprete il comando
+
+  #time ;;
+
+Dando di nuovo il comando
+
+  #time ;;
+
+viene disattivata la stampa.
+
+
+________________________________________________________________________________
+
+
+APPROSIMAZIONE DELLA FUNZIONE ESPONENZIALE MEDIANTE SERIE DI TAYLOR
+==================================================================
+** Esercizio difficile, vedi es. 11.7 del libro [HR] **
+   Occorre usare la funzione sumSeq definita nel file  seq.fsx  **
+
+Sia exp la funzione esponenziale tale che:
+
+   exp(x)  =  e^ x   // e: costante di Eulero (2.71....)
+
+Tale funzione puo' essere approssimata usando la seguente serie di Taylor (ST):
+
+ exp(x)  =   1/0!  +   x^1 / 1!  +  x^2 / 2! + ... +  x^k/ k! + .....       (ST)
+
+Lo scopo dell'esercizio e' di definire una funzione che calcola exp(x)
+con una precisione fissata (un numero decimale) usando la serie (ST).
+
+
+i) Sia t(x,k) il termine  della serie (ST)  di posto k, ossia:
+
+     t(x,k) :=  x^k / k!
+
+
+Definire la funzione 
+
+    f : float -> int -> float
+
+tale che, dati x di tipo float e  k>=0 di tipo int, calcola t(x,k), ossia:
+
+   f x k = t(x,k)      
+       
+
+
+Suggerimento
+^^^^^^^^^^^^
+
+Definire f per induzione su k:
+-  ** Base (k = 0) **
+   valore t(x,0)
+-  ** Passo induttivo (k > 0) **
+   definizione di t(x,k)  assumendo di aver gia' calcolato t(x,k-1).
+ 
+ii) Usando la funzioni f e la funzione  sumSeq (sequenza delle somme di una sequenza)
+definire la funzione 
+
+    apprTaylor : x -> seq<float>
+
+che, dato x:float, costruisce la sequenza infinita
+
+  t(x,0) , t(x,0) + t(x,1) ,  t(x,0) + t(x,1) + t(x,2) , ....     
+
+corrisponente alla sequenza infinita delle approssimazioni di exp(x).
+
+Ad esempio, i primi 10 elementi della sequenza
+
+  apprTaylor 1.0 
+
+sono
+
+1.0 , 2.0 , 2.5 , 2.666666667 , 2.708333333 , 2.716666667 , 2.718055556 , 2.718253968 , 2.71827877 , 2.718281526
+
+Notare che tali valori corrispondono ad  approssimazioni sempre piu' precise della costante e;
+infatti, la differenza fra un elemento della sequenza e il successivo diventa sempre piu' piccola.
+
+iii) Usando la sequenza generata da apprTaylor, definire la funzione
+
+   apprExp : float -> float -> float
+
+che, dato x:float e delta:float, calcola e^x con approssimazione delta.
+
+Piu' in dettaglio, va costruita la sequenza infinita  'apprTaylor x'
+delle approssimazioni di exp(x).
+Supponiamo che gli elementi di tale sequenza siano:
+
+  e0 ; e1 ; e2 ; e3 ; ...  ; e(n) ; e(n+1) ; .....
+
+L'elemento che approssima exp(x) con approssimazione delta e'
+l'elemento e(n) della sequenza tale che il modulo della differenza fra
+e(n+1) ed e(n) e' minore di delta:
+
+  | e(n+1) - e(n) | < delta       
+
+Notare che la differenza fra un elemento e il successivo diventa sempre piu' piccola,
+quindi l'approssimazione e' sempre calcolabile; ovviamente, piu' delta e' piccolo,
+piu' elementi della sequenza vanno generati.
+
+
+Esempi:
+
+apprExp 1.0 0.01  
+// val it : float = 2.708333333
+
+apprExp 1.0 0.0001 
+// val it : float = 2.718253968
+
+apprExp 1.0 0.0000001 
+// val it : float = 2.718281801
+
+apprExp 2.5 0.0000001 
+// val it : float = 12.18249394
+
+
