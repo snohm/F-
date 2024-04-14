@@ -1,0 +1,83 @@
+%{
+    L'idea degli esercizi è di creare un sistema per gestire esami, creando piani tenendo conto di eventuali vincoli sulla successione.
+}%
+% Tipo naturali
+nat : type.  %name nat N.
+z : nat.
+s : nat -> nat.
+0 = z.
+1 = s z.
+2 = s 1.
+3 = s 2.
+4 = s 3.
+5 = s 4.
+
+% Tipo esami
+exam: type.
+mat1: exam.
+mat2: exam.
+prog1: exam.
+prog2: exam.
+algo: exam.
+
+% Tipo lista di esami
+examlist: type.
+nil: examlist.
+#: exam -> examlist -> examlist. %infix right 6 #.
+
+% Codice esame
+codeOf: exam -> nat -> type.
+codeOf/mat1: codeOf mat1 0.
+codeOf/mat2: codeOf mat2 1.
+codeOf/prog1: codeOf prog1 2.
+codeOf/prog2: codeOf prog2 3.
+codeOf/algo: codeOf algo 4.
+
+%{
+    %% ESERCIZIO 1:
+1_a) Definire la relazione 
+    member: exam -> examlist -> type.
+    che indica se un esame è contenuto in una lista.
+1_b) Definire la relazione 
+    not_member: exam -> examlist -> type.
+    che indica se un esame non è contenuto in una lista.
+    Notare che esami diversi hanno codici diversi.
+    Dare una mode declaration di entrambi e scrivere query per verificare la correttezza.
+}%
+
+%{
+    %% ESERCIZIO 2:
+2) Definire la relazione
+    plan: nat -> examlist -> type.
+    che genera una lista di N esami diversi.
+    Dare una mode declaration.
+    Verificare la correttezza con una query, sapendo che con N=3 devono essere generate 60 liste.
+}%
+
+%{
+    Definiamo un modo di indicare i successori di un esame, ovvero gli esami che devono essere posti *dopo* un certo esame (se presenti in un piano).
+    Per esempio mat1 non compare tra i successori di mat2 perchè non può essere fatto dopo di mat2; invece mat2 è successore di mat1.
+}%
+succ: exam -> examlist -> type.
+succ/mat1: succ mat1 (prog1 # prog2 # mat2 # algo # nil).
+succ/mat2: succ mat2 (prog1 # prog2 # algo # nil).
+succ/prog1: succ prog1 (prog2 # mat1 # mat2 # algo # nil).
+succ/prog2: succ prog2 (mat1 # mat2 # algo # nil).
+succ/algo: succ algo (prog2 # mat2 # nil).
+
+%{
+    %% ESERCIZIO 3:
+3) Definire la relazione:
+    isSoundPlan: examlist -> type.
+    che controlla se un piano è coerente (=sound) rispetto alla successione degli esami.
+    Dare una mode declaration.
+}%
+
+%{
+    %% ESERCIZIO 4:
+4) Definire la relazione:
+    soundPlan: nat -> examlist -> type.
+    che genera tutti i piani coerenti di N esami.
+    Per semplicità usare le relazioni sopra definite plan e isSoundPlan.
+    Dare una mode declaration.
+}%

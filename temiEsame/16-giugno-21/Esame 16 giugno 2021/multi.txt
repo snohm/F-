@@ -1,0 +1,183 @@
+MULTISET GENERICO
+=================
+
+TEMPO: un'ora
+
+** file  multi.fsi, multi.fs, testms.fsx
+
+Un multi-insieme (bag) è una generalizzazione del concetto di insieme,
+dove gli elementi possono occorrere più di una volta.
+
+Un esempio di multi-insieme di char e' 
+
+ M =  { a , b , a , c , c ,  d , a , b }
+
+Il multi-insieme M  contiene:
+
+3 occorrenze di a
+2 occorrenze di b
+2 occorrenze di c
+1 occorrenza di d
+
+Complessivamente  M contiene 8 elementi.
+
+L'ordine che con cui gli elementi sono elencati non e' rilevante.
+Ad esempio, le notazioni
+
+ { a , a , b }     { b , a , a } 
+
+rappresentano lo stesso multi-insieme contenente due occorrenze di a e una di b.
+
+
+Il modulo ha la seguente interfaccia (esempi di uso sono mostrati al punto ii):
+
+------------------------------------
+
+// file  mult.fsi
+
+module Multi 
+
+type multi<'a when 'a : comparison> 
+
+val empty : multi<'a>
+// il multi-insieme vuoto
+
+val singleton : 'a -> multi<'a>
+// il multi-insieme con un unico elemento
+
+val add : 'a -> multi<'a> -> multi<'a>
+// aggiunge un elemento a un multi-insieme
+
+val cardEl :  x:'a -> multi<'a> -> int when 'a : comparison
+// computa il numero  di occorrenze dell'elemento x nel multi-insieme m
+// (se x non  occorre in m, il numero di occorrenze e' 0)
+
+val count : multi<'a> -> int when 'a : comparison
+// computa il numero complessivo di elementi in un multi-insieme
+
+val contains : 'a -> multi<'a> -> bool when 'a : comparison
+// controlla se un elemento appartiene al multi-insieme
+
+val remove : x:'a -> m:multi<'a> -> multi<'a> when 'a : comparison
+// rimuove *una* e una sola occorrenza dell'elemento x dal multi-insieme m.
+// Se x non occorre in m, m non cambia
+
+val ofList : 'a list -> multi<'a> 
+// genera il multi-insieme corrispondente a una lista data
+
+val  toList : multi<'a> -> 'a list when 'a : compariso
+// costruisce la lista contenente gli elementi nel multi-insieme;
+// l'ordine con cui gli elementi sono elencati non e' rilevante 
+
+
+------------------------------------
+
+(i) Vi si chiede di implementare questa interfaccia nel file multi.fs
+usando il tipo delle mappe (libro di testo sez 5.3)
+
+
+ type multi<'a when 'a : comparison> = M of Map<'a,int>
+ 
+
+Quindi il multi-insieme di char
+
+     M =  { a , a , a , b , b , c , c , d }
+ 
+è rappresentato da una mappa tale che:
+
+  a |-> 3 ,  b |-> 2 , c |-> 2  , d |-> 1
+
+Notare che la mappa e' definita solamente per gli elementi che compaiono almeno una volta in M.
+
+Tutte le operazioni vanne implementate in modo che tale proprieta'
+venga preservata, cioè gli elementi che non appartengono a un
+multi-insieme **non** hanno indice zero, semplicemente non compaiono
+nel dominio della mappa.
+
+Ad esempio, se a M si toglie una occorrenza di c e una occorrenza di d,
+si ottiene il multi-insieme
+
+   M1 =  { a , a , a , b , b , c }
+
+M1 e' rappresentato dalla mappa m1 tale che
+   
+  a |-> 3 ,  b |-> 2 , c |-> 1
+
+e m1 non e' definita su d.
+
+(ii) Generare la libreria multi.dll
+
+Verificare la correttezza della libreria  mult.dll eseguendo i seguenti test
+nel file testms.fsx
+
+--------------------------------------------------------
+//  file testms.fsx
+
+#r "multi.dll"
+open Multi
+
+let i = add 'a' empty |> add 'a' |> cardEl 'a'
+// i = 2
+
+let ms =  ofList ['b'; 'a'; 'c'; 'b'; 'b'; 'a']
+
+let c1 = cardEl 'b' ms
+// c1 = 3
+
+let c2 =  cardEl 'z' ms
+// c2 = 0
+
+let b1 = contains 'b' ms
+// b1 = true
+
+let b2 =  contains 'z' ms
+// b2 = false
+
+let n = count ms
+// n = 6
+
+let ms1 = add 'a' ms
+let l1 = toList ms1
+// l1  = ['a'; 'a'; 'a'; 'b'; 'b'; 'b'; 'c']
+
+let n1 = cardEl 'a' ms1
+// n1 = 3
+let k1 =  count ms1
+// k1 =  7
+
+let ms2 =  remove 'a' ms1
+let l2 = toList ms2
+// l2 = ['a'; 'a'; 'b'; 'b'; 'b'; 'c']
+
+let n2 = cardEl 'a' ms2
+// n2 = 2
+
+let k2 =  count ms2
+// k2 =  6
+
+let ms3 =  remove 'c' ms2
+let l3 = toList ms3
+// l3 = ['a'; 'a'; 'b'; 'b'; 'b']
+
+
+let ms4 =  remove 'c' ms3
+let l4 = toList ms4
+// l4 = ['a'; 'a'; 'b'; 'b'; 'b']
+
+let n4 = cardEl 'c'  ms4
+// n4 = 0
+
+let k4 =  count ms4
+// k4 = 5
+
+----------------------------------------------------------------
+
+(iii)
+
+Nel file  testms.fsx definire un test per validare la seguente proprietà via FsCheck
+
+- "se x appartiene a un multi-insieme m, allora il numero di occorrenze di x in m è > 0"
+
+
+
+

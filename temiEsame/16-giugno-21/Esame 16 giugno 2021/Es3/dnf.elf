@@ -1,0 +1,72 @@
+%{  DUTCH NATIONAL FLAG  (DNF)
+
+
+Lo scopo dell'esercizio e' definire un predicato dnf che ordina una lista di colori
+in modo che sia rispettata la precedenza fra colori nella bandiera olandese, ossia:
+il rosso precede il bianco e il bianco precede il blu.
+
+Per rappresentare i colori e le liste di colori usiamo le seguenti definizioni.
+
+}%
+
+
+col : type.   % colore
+r : col.  % red
+w : col.  % white
+b : col.  % blue
+
+collist : type.  % lista di colori
+nil	: collist.
+#	: col -> collist -> collist. %infix  right 6 #.
+
+%{
+
+Definire il predicato
+ 
+  dnf : collist -> collist -> type
+
+che, data una lista di colori, la riordina in modo che nella lista ottenuta 
+i colori rispettino l'ordine della bandiera olandese ( r < w < b).
+
+Definire un mode (%mode ) per il predicato dnf.
+
+Scrivere  una query (usando %query) che ordini con dnf la lista
+
+ w # b # w # r # b # b # r # w # w # r # nil
+
+Il risultato deve essere la lista
+
+ r # r # r # w # w # w # w # b # b # b # nil
+
+}%
+
+%{
+
+EXTRA CREDIT
+============
+
+Definire il predicato
+ 
+  isDnf : collist -> type
+
+che verifica se una lista di colori e' ordinata rispetto all'ordine definito sopra (r < b < w).
+Definere un mode opportuno per il predicato (con %mode).
+
+Scrivere delle query (con %query, una query per lista) in cui si chiama isDnf per verificare che:
+
+- le liste 
+
+ r # r # w # b # nil
+ w # b # b # nil
+ r # r # r # b # b # nil
+
+sono ordinate
+
+- le liste
+
+w # w # r # b # nil
+b # b # w # nil
+
+non sono ordinate
+
+%}

@@ -1,0 +1,64 @@
+S-EXPRESSIONS
+=============
+
+PARTE 2: 30 minuti
+
+** La soluzione va scritta nel file sexp2.fsx  **
+
+
+5. Now, we change the represenetation of sexp so that they are **typed**.
+As in the case of lists, we require that in a typed sexp all atoms
+must have the same type.
+
+To represent a typed sexp we introduce the type
+
+type 'a tsexp = Atom of char * 'a | Pair of ('a tsexp * 'a tsexp)
+
+where an Atom carries a tag (here a char) for its type.
+
+For simplicity, we allow only the types INT, FLOAT and STRING: 
+
+type ty = INT | FLOAT | STRING
+
+The corresponding tags are:
+
+  INT      --->  'i'
+  FLOAT    --->  'f'
+  STRING   --->  's'
+
+Example:
+
+let isat = Pair(Atom('s', "is"),Atom('s', "a")) // tsexp of string
+let onetwo = Pair(Atom('i', 1),Atom('i', 2))    // tsexp of int
+let ill = Pair(Atom('i', "1"),Atom('s', "1"))   
+
+The last one is ill-typed since it contains an atom with INT tag  and an atom with STRING tag,
+thus it shoud be rejected by the type checker
+
+
+The type checker satisifes these rules
+
+  tag c corresponds to type t
+---------------------------------
+     Atom(c,_) : t
+
+
+e1 : t         e2 : t
+-----------------------
+  Pair(e1,e2) : t
+
+
+ Write a function
+
+   tyck : 'a tsexp -> ty option
+
+that implements the above rules
+
+Examples:
+
+let t1 = tyck isat
+// val t1 : ty option = Some STRING
+let t2 = tyck onetwo
+// val t2 : ty option = Some INT
+let t3 = tyck ill
+// val t3 : ty option = None

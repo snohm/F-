@@ -1,0 +1,326 @@
+File: /home/alberto/f9/Lezioni/Lez11-eser2/tema-es2-19.txt Page 1 of 8
+NOTE PER LA CONSEGNA
+====================
+1) I file contenente il codice vanno caricati alla pagina
+ https://upload.di.unimi.it/
+sotto Seconda Esercitazione 2019
+I file da caricare sono:
+ red.fsx (esercizio A)
+ seq.fsx (esercizio B)
+ Stack.fs test.fsx rpn.fsx (esercizio C) 
+1) In caso vengano consegnate più copie dello stesso file, verra' corretta 
+l'ultima versione.
+2) Prima di caricare un file su upload, verificare che sia compilabile.
+File che NON compilano NON verranno corretti durante gli esami.
+___________________________________________________________________________________________________
+ESERCIZIO A:
+Reduce
+======
+** file red.fsx **
+La funzione "reduce" di tipo
+ reduce : ('a -> 'a -> 'a) -> 'a list -> 'a
+e' una variante di List.fold definita come segue.
+Dati
+ una funzione f : ('a -> 'a -> 'a)
+ una lista ls = [ x0 ;... ; xN ] : 'a list
+il valore di ( reduce f ls ) e' ottenuto computando
+ f (... ( f (f x0 x1) x2 ) ...) xN
+In pratica:
+1) applico f a x0 e x1 (primi due elementi della lista)
+2) applico f al valore ottenuto in 1) e a x2 (terzo elemento della lista)
+3) applico f al valore ottenuto in 2) e a x3 (quarto elemento della lista)
+e cosi' via.
+(i) Definire la funzione reduce, coprendo il caso in cui la lista
+fornita e' vuota (va sollevata una eccezione). 
+(ii) Definire **mediante reduce** le seguenti funzioni:
+ - sumlist : int list -> int, che somma gli elementi di una lista non vuota.
+ - maxlist : 'a list -> 'a when 'a : comparison, che trova il massimo elemento di 
+una lista
+- last : 'a list -> 'a, che estrae l'ultimo elemento da una lista non vuota.
+File: /home/alberto/f9/Lezioni/Lez11-eser2/tema-es2-19.txt Page 2 of 8
+(iii) Validare con FsCheck le seguenti proprieta':
+- prop_sumlist: sumlist e List.sum calcolano lo stesso valore su liste
+ non vuote.
+- prop_last: data una lista non vuota xs, 'last xs' coincide con il
+ primo elemento della lista inversa di xs.
+(iv) Definire la funzione reduceBack analoga a List.foldBack. Sono
+reduce e reduceBack equivalenti? Investigare con FsCheck
+(v) Si consideri la funzione
+List.tryFind : (('a -> bool) -> 'a list -> 'a option),
+che trova il primo elemento di una lista che soddisfa una certa
+proprietà, se esiste, altrimenti restituisce None.
+ List.tryFind (fun x -> x * x > 40) [1; 2; 6; 5; 4; 8; 10; 20 ; 9 ];;
+ val it : int option = Some 8
+Posso definirla con la reduce? Se si, darne una definizione, se no,
+spiegare perché no- Considerare qui solo liste non vuote.
+-----------------------------------------------------------------------
+ESERCIZIO B: MATRICI INFINITE
+==============================
+** file seq.fsx **
+Una *matrice infinita* e' una matrice avente un numero infinito di righe e colonne.
+Le righe sono numerate dall'alto verso il basso partendo da 0.
+Le colonne sono numerate da sinistra verso destra partendo da 0. 
+Negli esempi useremo le seguenti matrici infinite:
+matr1:
+ 0 0 0 0 0 .... // riga 0
+ 0 1 2 3 4 .... // riga 1 
+ 0 2 4 6 8 .... // riga 2 
+ 0 3 6 9 12 .... // riga 3
+ 0 4 8 12 16 ... // riga 4
+ ...............
+Per ogni k>= 0, la riga k e' la sequenza infinita dei multipli di k
+matr2:
+ 0 0 0 0 0 ....
+ 1 1 1 1 1 ....
+ 2 2 2 2 2 ....
+ 3 3 3 3 3 ....
+ ..............
+Per ogni k>= 0, la riga k e' la sequenza infinita k; k; k; ....
+Una matrice infinita i cui elementi hanno tipo T e' rappresentata
+da una sequenza matr di tipo seq<seq<T>>.
+La sequenza matr e' una sequenza infinita 
+File: /home/alberto/f9/Lezioni/Lez11-eser2/tema-es2-19.txt Page 3 of 8
+ r_0 ; r_1 ; r_2 ; r_3 ; .....
+e, per ogni k >= 0, r_k e' la sequenza che rappresenta la riga k della matrice.
+Ad esempio, la matrice matr1 e' rappresentata dalla sequenza infinita
+ sq_0 ; sq_1 ; sq_2 ; ......
+dove, per ogni k>=0, sq_k e' la sequenza infinita dei multipli di k.
+La matrice matr2 e' la sequenza infinita
+ sq_0 ; sq_1 ; sq_2 ; ......
+dove, per ogni k>=0, sq_k e' la sequenza infinita k; k; k; ....
+NOTA
+====
+E' possibile che nei tipi mostrati dall'interprete compaiano dei
+caratteri # non indicati nel testo, ad esempio
+ <seq<#seq<'a>> 
+invece di
+ <seq<seq<'a>> 
+i) Definire le matrici infinite matr1 e matr2 descritte sopra;
+matr1 e matr2 devono avere tipo seq<seq<int>>.
+ii) Definire la funzione
+ item : i:int -> j:int -> matr:seq<seq<'a>> -> 'a
+che estrae l'elemento alla riga i e colonna j della matrice matr.
+Si *assume* i >= 0, j >= 0 e che matr sia una matrice infinita.
+Esempi:
+let e1 = item 3 5 matr1 // 15
+let e2 = item 13 10 matr1 // 130
+let e3 = item 5 100 matr2 // 5
+iii) Definire la funzione
+ col : k:int -> matr:seq<seq<'a>> -> seq<'a>
+che estrae le colonna k di matr.
+Si *assume* k >= 0 e che matr sia una matrice infinita.
+Esempi:
+let c1 = col 5 matr1 |> Seq.take 10 |> Seq.toList
+// [0; 5; 10; 15; 20; 25; 30; 35; 40; 45]
+let c2 = col 5 matr2 |> Seq.take 10 |> Seq.toList
+// [0; 1; 2; 3; 4; 5; 6; 7; 8; 9]
+iv) Definire la funzione
+ take : i:int -> j:int -> matr:seq<seq<'a>> -> 'a list list
+che estrae le prime i righe della matrice matr e, per ciascuna riga,
+i primi j elementi. Il risultato deve essere una lista di liste.
+File: /home/alberto/f9/Lezioni/Lez11-eser2/tema-es2-19.txt Page 4 of 8
+Si *assume* i>= 0, j >= 0 e che matr sia una matrice infinita.
+Esempi:
+let l1 = take 6 4 matr1 
+// [[0; 0; 0; 0]; [0; 1; 2; 3]; [0; 2; 4; 6]; [0; 3; 6; 9]; [0; 4; 8; 12]; [0; 5; 
+10; 15]]
+let l2 = take 6 3 matr2 
+// [[0; 0; 0]; [1; 1; 1]; [2; 2; 2]; [3; 3; 3]; [4; 4; 4]; [5; 5; 5]]
+v) La matrice *trasposta* di una matrice matr e' la matrice matrTr tale che:
+ per ogni k >= 0, la riga k di matrTr coincide con la colonna k di matr.
+Ad esempio, la matrice trasposta di matr2 e':
+ 0 1 2 3 ....
+ 0 1 2 3 ....
+ 0 1 2 3 ....
+ 0 1 2 3 ....
+ ............
+La matrice trasposta di matr1 coincide con matr1.
+Definire la funzione 
+ transp : matr:seq<seq<'a>> -> seq<seq<'a>>
+che costruisce la matrice trasposta di una matrice infinita matr.
+Esempi:
+let tr1 = transp matr1 |> take 6 3 
+// [[0; 0; 0]; [0; 1; 2]; [0; 2; 4]; [0; 3; 6]; [0; 4; 8]; [0; 5; 10]]
+let tr2 = transp matr2 |> take 6 3 
+// [[0; 1; 2]; [0; 1; 2]; [0; 1; 2]; [0; 1; 2]; [0; 1; 2]; [0; 1; 2]]
+** EXTRA CREDIT **
+==================
+Validare con FsCheck la seguente proprieta' trans_prop:
+* transp_prop i j
+ Sia matr una matrice infinita e sia matrTr la matrice trasposta di matr. 
+ Allora, l'elemento alla riga i e col. j di matr coincide con
+ l'elemento alla riga j e col. i di matrTr.
+Notare che matr *non* e' un parametro di trans_prop.
+La matrice matr va definita in trans_prop usando la funzione
+ seqInfiniteRnd : unit -> seq<int>
+scritta sotto che genera una sequenza infinita di interi.
+Esempio di uso di seqInfiniteRnd:
+seqInfiniteRnd() |> Seq.take 5 |> Seq.toList ;;
+// [49; 0; 9; 10; 33]
+---------------------------------------------
+File: /home/alberto/f9/Lezioni/Lez11-eser2/tema-es2-19.txt Page 5 of 8
+// Definizione funzione seqInfiniteRnd 
+#r "FsCheck"
+open FsCheck
+open System
+let posIntRnd = Gen.choose (1, 100) |> Gen.sample 100 1 |> List.head
+// genera sequenza infinita di interi
+let seqInfiniteRnd () =
+ let r = posIntRnd 
+ Seq.initInfinite (
+ fun index ->
+ let n = index + r
+ n * (if (index > 0) then r%index else r)
+ )
+// seqInfiniteRnd : unit -> seq<int>
+----------------------------------------------
+ESERCIZIO 3: Moduli
+=========
+L'esercizio e' suddiviso in tre parti.
+1) Viene chiesto di implementare un modulo Stack che rappresenta uno stack 
+generico.
+2) Implementare proprietà FsCheck usando la teoria equazionale degli stack
+3) Utilizzando il modulo Stack, implementare una funzione per valutare
+una espressione aritmetica in notazione postfissa (Reverse Polish Notation).
+___________________________________________________________________________________
+3.1) MODULO STACK
+=================
+Implementare un modulo Stack che definisca le seguenti operazioni:
+- empty : 'a Stack
+ Costante che rappresenta uno stack vuoto 
+ 
+- push : 'a -> 'a Stack -> 'a Stack
+ Inserisce un elemento in cima allo stack e restituisce lo stack ottenuto
+- pop : 'a Stack -> 'a * 'a Stack
+ Toglie l'elemento in cima allo stack e restituisce la coppia
+ formata dall'elemento tolto e lo stack ottenuto.
+- top : 'a Stack -> 'a
+ Mostra l'elemento in cima allo stack senza toglierlo
+- size : 'a Stack -> int 
+ Calcola la dimensione dello stack (numero elementi in esso contenuti).
+Ricordare che lo stack va gestito in modalita' LIFO (Last In First Out).
+Definire in Stack.fsi la segnatura e in Stack.fs l'implementazione.
+File: /home/alberto/f9/Lezioni/Lez11-eser2/tema-es2-19.txt Page 6 of 8
+---------------------
+3.2) ASSIOMI
+==================
+** file test.fsx **
+Gli stack soddisfano i seguenti assiomi:
+ size(empty) = 0
+ size(push(S,e)) = size(S) + 1
+ isEmpty(empty) = true
+ isEmpty(push(S,e)) = false
+ top(empty) = raise EmptyStack 
+ top(push(S,e)) = e
+ pop(empty) = raise EmptyStack 
+ pop(push(S,e)) = e,S
+Si scrivano delle proprietà FsCheck che validino quanto sopra utilizzando
+questa strategia di generazione. Rimpiazzate il test st = st con
+i vostri assiomi nella proprietà propAx, che abbisogna delle sguenti dichiarazioni:
+type cmd =
+ E 
+ | PU of int 
+ | POP 
+let rec interp q cs =
+ match cs with
+ [] -> empty
+ | E :: rest -> interp q rest
+ | (PU n) :: rest -> interp q rest |> push n 
+ | POP :: rest -> let nq = (interp q rest) 
+ let (_,qq) = pop nq
+ qq
+let propAx ( n : int) cms =
+ try
+ let st = interp empty cms
+ printfn "generated stack is: %A" st
+ [st = st ] // cambiare qui!
+ 
+ with
+ |EmptyStack -> [true] 
+______________________________________________________________________________
+3.3) REVERSE POLISH NOTATION
+==============================
+ file ** rpn.fsx **
+Una espressione aritmetica e' in *Reverse Polish Notation (RPN)* se l'operatore
+e' scritto dopo i suoi argomenti (notazione postfissa).
+Esempi di RPN:
+7 5 - corrispondente a 7 - 5
+10 3 2 * + corrispondente a 10 + (3 * 2) 
+10 3 + 2 * corrispondente a (10 + 3) * 2 
+File: /home/alberto/f9/Lezioni/Lez11-eser2/tema-es2-19.txt Page 7 of 8
+10 6 1 - * 4 - 2 5 * + corrispondente a 10 * (6 - 1) - 4 + 2 * 5
+5 1 2 + 4 * + 3 − corrispondente a 5 + ((1 + 2) * 4) − 3
+Notare che: 
+* le RPN non richiedono uso di parentesi (non c'e' ambiguita' nella loro struttura)
+* una RPN puo' essere vista come una successione finita di token,
+ dove un token e' una costante intera o un operatore.
+Una RPN puo' essere valutata eseguendo la seguente procedura,
+che utilizza uno stack di interi di supporto.
+=================================================================
+Input: rpn da valutare
+^^^^^
+ // rpn: successione finita di token
+ // token: costante intera | operatore 
+st := stack vuoto // stack di interi
+tk := primo token di rpn 
+Finche' ci sono token da analizzare esegui le seguenti operazioni (1) e (2):
+ (1) se tk e' una costante intera 
+ poni tk in st (push)
+ altrimenti // tk e' un operatore
+ preleva da st due interi n1 e n2 (due pop)
+ esegui l'operazione tk su n1 e n2
+ (attenzione all'ordine degli operandi!)
+ poni in st il risultato ottenuto (push)
+ (2) Se rpn contiene ancora elementi da analizzare
+ tk := prossimo elemento di rpn 
+ // si ripete il ciclo da (1)
+// il ciclo termina quando in (2) non ci sono piu' elementi da analizzare
+Ouptut: intero in cima allo stack 
+^^^^^^
+======================================================================
+Al termine del ciclo, lo stack deve contenere esattamente un elemento,
+che e' il risultato della valutazione.
+Se lo stack e' vuoto oppure contiene piu' di un elemento significa 
+che rpn non e' sintatticamente corretta.
+Un esempio di valutazione si puo' trovare in
+ https://en.wikipedia.org/wiki/Reverse_Polish_notation
+*******
+Per rappresentare una RPN definiamo i seguenti tipi:
+// operazioni ammesse: addizione, prodotto, differenza
+type operator = Add | Prod | Minus
+// un token e' unn operatore oppure un intero 
+type token =
+ | Op of operator // operatore
+ | C of int // intero 
+Rappresentiamo una RPN mediante una lista di token.
+Esempi di RPN:
+let rpn1 = [ C 7 ; C 5 ; Op Minus ] 
+// 7 5 - 
+File: /home/alberto/f9/Lezioni/Lez11-eser2/tema-es2-19.txt Page 8 of 8
+// in notazione infissa: 7 - 5 
+let rpn2 = [ C 10 ; C 3 ; C 2 ; Op Prod ; Op Add ]
+// 10 3 2 * +
+// in notazione infissa: 10 + 3 * 2 
+let rpn3 = [ C 10 ; C 3 ; Op Add ; C 2 ; Op Prod ]
+// 10 3 + 2 * 
+// in notazione infissa: (10 + 3) * 2 
+let rpn4 = [ C 10 ; C 6 ; C 1 ; Op Minus ; Op Prod ; C 4 ; Op Minus ; C 2 ; C 5 ; 
+Op Prod ; Op Add ]
+// 10 6 1 - * 4 - 2 5 * +
+// in notazione infissa: 10 * (6 - 1) - 4 + 2 * 5
+Definire la funzione 
+ evalRpn : token list -> int
+ 
+che valuta una RPN usando la procedura descritta sopra.
+Per simulare il ciclo, occorre definire la funzione ricorsiva
+ 
+ eval : token list -> Stack<int> -> int
+che valuta una RPN usando lo stack di interi fornito come argomento.
+Se al termine della valutazione lo stack e' vuoto oppure contiene piu' di un 
+elemento,
+va sollevata una eccezione (RPN non corretta).
+Verificare che:
+evalRpn rpn1 = 2 
+evalRpn rpn2 = 16
+evalRpn rpn3 = 26
+evalRpn rpn4 = 56

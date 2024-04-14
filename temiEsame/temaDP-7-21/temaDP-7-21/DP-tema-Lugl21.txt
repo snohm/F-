@@ -1,0 +1,261 @@
+NOTE PER LA CONSEGNA
+====================
+
+1) I file contenente il codice vanno caricati alla pagina
+
+    https://upload.di.unimi.it/
+
+sotto Programmazione Dichiarativa, appello 6 luglio 2021
+
+I file da caricare sono:
+
+subtyping.fsx            (esercizio A)
+poly.fs, usepoly.fsx 	 (esercizio B) 
+palin.elf                (esercizio C) 
+
+1) Usare i mock file disponibili su upload. Le definizioni ed esempi
+scritti non vanno cancellati.  Quando si implementa una funzione, il
+valore di default scritto va sostituito con il proprio codice
+
+2) In caso vengano consegnate più copie dello stesso file, verrà
+corretta l'ultima versione.
+
+3) Prima di caricare un file su upload, verificare che sia compilabile.
+File che NON compilano NON verranno corretti.
+
+______________________________________________________________________
+
+ESERCIZIO A: TYPE CHECKER PER LISTE DI INTERI  CON SOTTOTIPI
+============================================================
+
+
+** file da consegnare: subtyping.fsx ** 
+
+Consideriamo un linguaggio che permette di rappresentare liste di interi
+con operazioni cons, hd (head) e tl (tail).
+Una espressione 'e' del linguaggio e' definita come segue:
+
+ e ::= k | nil | cons(e1,e2) | hd e | tl e  
+
+dove k e' una costante intera.
+
+Per rappresentare una espressione 'e' introduciamo il tipo:
+
+type tm =
+  K of int
+  | Nil
+  | Cons of tm * tm
+  | Hd of tm
+  | Tl of tm
+
+
+Oltre al tipo standard degli interi, vogliamo qui caratterizzare meglio il tipo delle liste.
+Queste infatti possono essere vuote o non vuote, e certe operazioni dovrebbero essere permesse
+solo su liste non vuote. Vogliamo fare questo controllo nel type checker e non a run time
+
+Questo porta alle dichiarazioni:
+
+type tp = INT | L | E | C 
+
+dove:
+
+INT e' il tipo di una costante intera
+L   e' il tipo di una lista (vuota o non vuota)
+E   e' il tipo di una lista vuota (Nil)
+C   e' il tipo di una lista non vuota (contiene almeno un Cons)
+
+
+1. Scrivere un type checker, seguendo queste regole:
+  - una costante ha tipo intero (INT)
+  - la lista vuota ha tipo E
+  - una Cons(e1,e2) ha tipo C se e1 ha tipo INT e e2 ha tipo L oppure E oppure C
+  - (Hd e1) ha tipo INT se e1 ha tipo C
+  - (Tl e1) ha tipo L se e1 ha tipo C
+
+Se l'espressione sorgente non è tipabile (es. hd nil, cons 2 3), allora si
+restituisca None, cioè il type checker ha tipo
+
+ tpck : tm -> tp option
+
+Esempi:
+
+tpck Nil ;;  // Some E    
+tpck (Cons( K 3, Nil)) ;;  // Some C       
+tpck (Cons( Nil , Nil)) ;;  // None 
+tpck (Hd   (Cons( K 3, Nil))  ) ;; // Some INT
+tpck ( Tl  (Cons( K 3, Nil)) ) ;; // Some L
+tpck ( Hd Nil ) ;; // None
+
+
+2.  Scrivere un interprete **difensivo** per il tipo tm
+
+  evalo : tm -> tm option
+
+Esempi:
+
+evalo ( Hd (Cons(( K 3),Nil)) ) ;;     // Some (K 3) 
+evalo ( Tl (Cons(K 3,Nil)) ) ;;        // Some Nil
+evalo ( Hd (Tl (Cons(K 3,Nil))) ) ;;   // None 
+
+
+
+* EXTRA CREDIT *
+================
+
+
+Questo linguaggio ha la seguente proprietà:
+
+- se una espressione è ben tipata, allora la sua esecuzione avrà sempre successo, cioè non restituisce mai None.
+
+Si scriva la proprietà e la si validi con FsCheck. 
+
+_____________________________________________________________________________________________________________________
+
+
+ESERCIZIO B: ADT POLINOMI
+==========================
+
+** La soluzione va scritta nei file poly.fs e usepoly.fsx  **
+
+In questo esercizio creiamo una libreria per la gestione di polinomi 
+con coefficienti interi P(x) in una data variabile x.
+
+Rappresentiamo un polinomio P(x)  della forma
+
+  a_0 + a_1 · x + ... + a_n · x^n 
+
+avente  coefficienti interi a_0 , a_1 , ..., a_n mediante la lista
+
+  [a_0 ; a_1 ; ... ; a_n ] 
+
+dei coefficienti (per ogni k>=0, a_k e' il coefficiente di x^k).
+
+Ad esempio:
+
+La lista [5; 1; 10] rappresenta il polinomio
+  
+    5 + x + (10 . x^2)
+
+La lista  [ 2 ; 0 ; 0 ; 5 ] rappresenta il polinomio
+
+    2 + (5 . x^3) 
+ 
+- La lista [10]  rappresenta il polinomio
+ 
+  10 
+
+Con tale convenzione, la rappresentazione non e' univoca.
+
+Ad esempio, le liste di coefficienti
+
+ [5; 1; 10]   [5; 1; 10; 0]    [5; 1; 10; 0; 0]     ....
+
+rappresentano tutte lo stesso  polinomio:
+
+  5 + x + (10 . x^2)
+
+
+Per avere una rappresentazione univoca, richiediamo che le operazioni
+sui polinomi preservino l'invariante di avere liste di coefficienti in
+**forma normale**:
+
+- Una lista di coefficienti e' in forma normale  se
+  l'ultimo coefficiente della lista e' diverso da 0.
+
+
+Notare che la forma normale del polinomio nullo (ossia, il polinomio in cui tutti i coefficienti sono 0),
+e' la lista vuota (notare che la lista [0] non e' in forma normale).
+
+
+Quando implementate le operazioni sui polinomi:
+-  potete *assumere* che il polinomio dato (ossia, la lista dei suoi coefficienti) sia in forma normale;
+-  dovete *garantire* che il polinomio ottenuto sia in forma normale.
+
+
+Per agevolare la trasformazione in forma normale,  definire in poly.fs
+la funzione ausiliara
+
+ normalize :  cs:int list -> int list
+
+che data una qualunque lista cs di coefficienti, la porta in forma normale
+eliminando gli zeri in coda.
+Ad esempio:
+
+  normalize [2; 0; 0; 5; 0; 0; 0]  = [2; 0; 0; 5]  // 2 + 5.x^3
+  normalize [0; 0; 1; 0; 0; 0; 0] =  [0; 0; 1]     // x^2
+  normalize [0; 0; 0; 0; 0; 0; 0] =  []            // polinomio nullo
+
+************************
+
+L'interfaccia (vedi file poly.fsi) del modulo Poly  da implementare e' come segue:
+
+------------------------------------------
+
+module Poly
+type poly
+
+// Genera un polinomio *normalizzato*  data la lista arbitraria  dei suoi coefficienti.
+// Ad esempio, se la lista e'  [2; 0; 0; 5; 0; 0; 0],
+// il polinomio generato e'  '2 + 5.x^3'
+val ofList : int list -> poly
+
+// Restituisce la lista  dei coefficienti del polinomio.
+// La lista deve essere in forma normale
+val toList : poly -> int list
+
+// Controlla che un polinomio non sia nullo
+val notNullPoly: poly -> bool
+
+// Moltiplica un polinomio P(x) per una costante intera
+val multxc : poly -> int -> poly
+
+// Moltiplica un polinomio  P(x) per la variabile x stessa
+val multxx : poly ->  poly
+
+// Genera il polinomio opposto, cioe' dove i coefficienti sono  negati.
+// Ad esempio, l'opposto di  '2 + (5. x^3)'  e' il polinomio '-2 + (-5. x^3)'
+val opposto : poly -> poly
+
+// Calcola la somma di due polinomi 
+val somma : poly -> poly -> poly
+
+// Calcola la differenza di due polinomi 
+val diff : poly -> poly -> poly
+
+// Calcola il grado di un polinomio (vedi definizione sotto).
+val grado : poly -> int
+
+Si ricorda che il *grado* di un polinomio e' dato dal grado del monomio piu' alto.
+Ad esempio:
+
+'2 + (5. x^3)' ha grado 3     '7 . x' ha grado 1     '10' ha grado 0.
+
+Se il polinomio e' nullo, va sollevata una eccezione mediante failwith
+(il grado del polinomio nullo non e' definito).
+
+
+------------------------------------------------------------
+
+(i) Implementare il modulo poly.fs che soddisfa la detta interfaccia
+
+(ii) Creare la libreria poly.dll
+
+(iii) Eseguire i test nel file  usepoly.fsx e controllare la correttezza della propria implementazione 
+
+(iv)  Scrivere e validare nel file usepoly.fsx la seguente  proprietà FsCheck:
+
+-  se sommo p1 e p2 e poi sotraggo p2, ri-ottengo p1
+
+** EXTRA-CREDIT **
+
+Scrivere e validare nel file usepoly.fsx la seguente proprietà FsCheck:
+- il grado della della somma di due polinomi è minore o uguale al massimo grado dei due addendi
+
+____________________________________________________________________________________________________
+
+ESERCIZIO C: PAROLE PALINDROME
+==============================
+
+** file da caricare: palin. elf **
+
+Il testo dell'esercizio e' nel file palin.elf
