@@ -157,14 +157,13 @@ ii) Verificare che la lista dei primi 15 elementi della sequenza
     sumSeq nat 
 e' [0; 1; 3; 6; 10; 15; 21; 28; 36; 45; 55; 66; 78; 91; 105]
 *)
-// ok ma index non dovrebbe esserci, mi serve un modo per ogn volta prendere n+1 elem
-let rec sumSeq sq index = 
-    let index = index + 1 
-    let subsq = Seq.take index sq
-    let subsq = Seq.toList subsq
-    let ris = List.foldBack (fun x acc -> x + acc ) subsq 0 
-    seq{
-       yield ris 
-       yield! sumSeq sq index
-    }
-Seq.toList(Seq.take 10 (sumSeq nat 0));;
+let sumSeq sq =
+    let rec sums sq acc= 
+        let h = Seq.head sq
+        let sq = Seq.tail sq
+        seq{
+          yield h + acc 
+          yield! sums sq (h+acc) 
+        }
+    sums sq 0 
+Seq.toList(Seq.take 10 (sumSeq nat));;
