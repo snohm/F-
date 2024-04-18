@@ -50,9 +50,21 @@ let ofList ss = union (S ss) empty;;
 
 let wrong = S ([1;1]);;
 
+// esISET come liste 
+let count (S ss) = List.length ss
 
+let map f (S ss) = 
+    let risL = List.map(f) ss 
+    let rec recAdd listAdd ris  =
+        match listAdd with
+        | y :: ys -> recAdd ys (add y ris) 
+        | _ -> ris
+    recAdd risL empty
+ 
+let isSubset (S s2) (S s1) = 
+    let (S s3) = union (S s1) (S s2)
+    List.sort s1 = List.sort s3 
 
-
-
+let min (S ss) = List.min ss
 
 
