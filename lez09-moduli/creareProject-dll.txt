@@ -1,0 +1,5 @@
+Aprire il terminal nella directory dove si vuole creare il progetto
+    > – dotnet new classlib --language "F#"
+Aprire il file *.fsproj e aggiungere nell'ordine i file .fsi .fs,
+    > dotnet build
+Il file *.dll sarà in “bin/Debug/net8.0”.

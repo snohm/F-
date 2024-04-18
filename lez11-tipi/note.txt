@@ -1,0 +1,3 @@
+- fare eval da exp a val, e così enviroments
+
+un generatore per stringhe
