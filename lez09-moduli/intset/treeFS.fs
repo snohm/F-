@@ -57,3 +57,35 @@ let rec toList_slow tree  =
             toList left @  [r] @ toList right
   *)  
 
+
+// esISET come alberi 
+let tree = Node(1, 
+                    Node(2, 
+                        Node(4, 
+                            Node(8, Leaf, Leaf), 
+                            Node(9, Leaf, Leaf)), 
+                        Node(5, 
+                            Node(10, Leaf, Leaf), 
+                            Node(11, Leaf, Leaf))),
+                    Node(3, 
+                        Node(6, Leaf, Leaf), 
+                        Node(7, Leaf, Leaf))
+            )
+let rec count btree = 
+    match btree with
+    | Leaf -> 0
+    | Node(_, left, right) -> 1 + count left + count right 
+
+let map f btree =
+    let ris = toList btree |> List.map(f) 
+    let rec rmDup elemL ris =
+        match elemL with
+        | y :: ys -> if List.contains y ris then rmDup ys ris else rmDup ys (y::ris)
+        | _ -> ris
+    rmDup ris [] |> List.rev |> ofList 
+
+let rec isSubset tree2 tree1= 
+    let t3 = union tree1 tree2 |> toList  
+    List.sort t3 = List.sort(toList tree1)  
+
+let min btree = toList btree |> List.min
