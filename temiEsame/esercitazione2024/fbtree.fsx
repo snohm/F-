@@ -39,9 +39,8 @@ let tree3 =
 
 // 1) count : 'a fbtree -> int
 //che conta i nodi di un albero.
-let ((a:int),(tree: 'a fbtree)) = tree1
-let count fbtree = 
+let rec count fbtree i = 
     match fbtree with 
+    | Node(_, y::ys) -> 1 + count y + //ys 
     | Node(_, []) -> 1
-    | Node(_, )
 
