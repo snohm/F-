@@ -25,3 +25,11 @@ val union : IFSet -> IFSet -> IFSet
 val ofList :  int list -> IFSet 
 
 val toList :  IFSet  -> int list 
+
+val count : IFSet -> int
+
+val map : (int -> int) -> IFSet -> IFSet
+
+val isSubset : IFSet->IFSet-> bool
+
+val min : IFSet-> int
