@@ -67,6 +67,9 @@ let chadFbtree = Node(0,
                                                      Node(28, [])     
                                                    ])])])                       
                       ])
+// ***************************************************************************************************************************//
+//                    Le funzioni dovrebbero essere definite su una liena mediante funzioni HO ma non sono capace             //
+// ***************************************************************************************************************************//
 // 1) count : 'a fbtree -> int
 //che conta i nodi di un albero.
 let rec count fbtree = 
@@ -89,52 +92,37 @@ let rec count fbtree =
     | Node(_, y::[]) -> 1 + count y
     | Node(_, y::ys) -> 1 + count y + countI ys 
 
-// (1 + acc + (List.fold(fun acc x -> acc + 1 ) 0 xs)) 
-
-let rec countHO tree = List.fold(fun acc Node(_, xs) ->match xs with 
-                                                         | [] -> 0
-                                                         | y::[] -> 1
-                                                         | y::ys -> 1
-                                                        
-                                ) 0 tree
-
-
-let rec countHO2 tree = 
-   match tree with
-    | Node(_, xs) ->  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 let rec contains fbtree x = 
     let rec countI ys x =
       let y = List.head ys
       match (y,ys) with
       | Node(n, []), _::[] -> n = x 
       | Node(n, []), _::xs -> if n <> x then countI xs x else true 
-      
+
       | Node(n, y::[]), _::[] -> if n <> x then contains y x else true
       | Node(n, y::[]), _::xs -> if n <> x then  contains y x || countI xs x else true  
 
       | Node(n, y::ys), _::[] -> if n <> x then  contains y x || countI ys x else true 
       | Node(n, y::ys), _::xs -> if n <> x then  contains y x || countI ys x || countI xs x else true  
-
-    match fbtree x with 
+    match (fbtree, x) with 
     | Node(n, []), x -> n = x  
     | Node(n, y::[]), x ->  if n <> x then contains y x else true
     | Node(n, y::ys), x ->  if n <> x then contains y x || countI ys x else true  
   
+let rec tree2list fbtree =
+    let rec countI ys =
+      let y = List.head ys
+      match (y,ys) with
+      | Node(x, []), _::[] -> [x] 
+      | Node(x, []), _::xs -> [x] @ countI xs 
+      
+      | Node(x, y::[]), _::[] -> [x] @ tree2list y
+      | Node(x, y::[]), _::xs -> [x] @ tree2list y @ countI xs  
 
+      | Node(x, y::ys), _::[] -> [x] @ tree2list y @ countI ys  
+      | Node(x, y::ys), _::xs -> [x] @ tree2list y @ countI ys @ countI xs  
+
+    match fbtree with 
+    | Node(x, []) -> [x]
+    | Node(x, y::[]) -> [x] @ tree2list y
+    | Node(x, y::ys) -> [x] @ tree2list y @ countI ys 
